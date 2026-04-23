@@ -251,6 +251,63 @@
         });
     });
 
+    // Handle add to cart button on product detail and related products (AJAX)
+    $('.btnAddToCart').click(function (event) {
+        event.preventDefault();
+        if (!isLogin()) {
+            $.toast({
+                heading: 'Error',
+                text: 'You need to login to add products to cart.',
+                position: 'top-right',
+                icon: 'error'
+            });
+            return;
+        }
+        const productId = $(this).attr('data-product-id');
+        const token = $("meta[name='_csrf']").attr("content");
+        const header = $("meta[name='_csrf_header']").attr("content");
+
+        // Get quantity from input field if available, otherwise default to 1
+        let quantity = 1;
+        const quantityInput = $("#cartDetails0\\.quantity");
+        if (quantityInput.length > 0) {
+            quantity = parseInt(quantityInput.val()) || 1;
+        }
+
+        $.ajax({
+            url: `${window.location.origin}/api/add-product-to-cart`,
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader(header, token);
+            }
+            , type: 'POST'
+            , data: JSON.stringify({
+                productId: productId,
+                quantity: quantity
+            })
+            , contentType: 'application/json'
+            , success: function (response) {
+                const sum = +response;
+                //update cart
+                $("#sumCart").text(sum);
+                $.toast({
+                    heading: 'Success',
+                    text: 'Product added to cart successfully.',
+                    position: 'top-right',
+                    icon: 'success'
+                });
+
+            }
+            , error: function (error) {
+                $.toast({
+                    heading: 'Error',
+                    text: 'Failed to add product to cart. Please try again.',
+                    position: 'top-right',
+                    icon: 'error'
+                });
+            }
+        });
+    });
+
     function restoreFilterStateFromUrl() {
         const params = new URLSearchParams(window.location.search);
 
